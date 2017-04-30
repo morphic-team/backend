@@ -9,6 +9,8 @@ class SearchResult(db.Model, Entity):
   __tablename__ = 'search_results'
   marshaller = {
     'id_': fields.Integer,
+    'next_id': fields.Integer,
+    'previous_id': fields.Integer,
     'user_id': fields.Integer,
     'search_id': fields.Integer,
     'image_id': fields.Integer,
@@ -46,6 +48,32 @@ class SearchResult(db.Model, Entity):
   tags = relationship('Tag')
 
   result_fields = relationship('ResultField')
+
+  @property
+  def next_id(self):
+    return (
+        SearchResult
+        .query
+        .filter(SearchResult.search==self.search)
+        .filter(SearchResult.user==self.user)
+        .filter(SearchResult.id_>self.id_)
+        .order_by(SearchResult.id_)
+        .first()
+        .id_
+    )
+
+  @property
+  def previous_id(self):
+    return (
+        SearchResult
+        .query
+        .filter(SearchResult.search==self.search)
+        .filter(SearchResult.user==self.user)
+        .filter(SearchResult.id_<self.id_)
+        .order_by(SearchResult.id_.desc())
+        .first()
+        .id_
+    )
 
   def update_tags(self):
     new_tags = []

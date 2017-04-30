@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request
 from flask.ext.sqlalchemy import SQLAlchemy
 
@@ -14,7 +15,8 @@ def create_app(environment='dev'):
   app = Flask(__name__)
 
   # TODO: Fix this hardcoded password.
-  app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://morphs:dontlook@localhost:5432/prod'
+  app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = 'False'
+  app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']
   app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 
