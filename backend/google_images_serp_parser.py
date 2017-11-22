@@ -7,6 +7,7 @@ from lxml.etree import HTML, tostring
 class GoogleImagesSERPParser(object):
   def __init__(self):
     self.link_re = re.compile(r'.*?imgres\?imgurl=(.*?)&imgrefurl')
+    
     self.visible_link_re = re.compile(r'.*?imgrefurl=(.*?)&')
 
   def double_unquote(self, double_quoted_string):
@@ -34,6 +35,3 @@ class GoogleImagesSERPParser(object):
       visible_link = self.double_unquote(double_quoted_visible_link)
 
       yield link, visible_link
-
-
-

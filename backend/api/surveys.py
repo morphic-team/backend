@@ -2,7 +2,7 @@ import json
 import unicodecsv
 from flask import send_file
 from flask.ext.restful import marshal_with, reqparse, fields
-from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 from backend import db
 from backend.api import api
 from backend.models import Survey, SearchResult, Search, SurveyField, Tag
@@ -14,7 +14,14 @@ def get_survey_results(survey_id):
   #TODO: joinedload .fields, .search_results and
   # search_result.result_fields and use a local cache
   # of survey_fields to get survey_field.label by id.
-  survey = Survey.query.filter(Survey.id_==survey_id).first()
+  survey = (
+    Survey
+    .query
+    .filter(Survey.id_ == survey_id)
+    .options(joinedload(Survey.fields))
+    .options(joinedload(Survey.search_results).joinedload(SearchResult.result_fields))
+    .first()
+  )
 
   field_names = ['morphic_id', 'completion_state']
   for field in survey.fields:
