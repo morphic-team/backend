@@ -5,7 +5,7 @@ from flask.ext.restful import marshal_with, reqparse, fields
 from sqlalchemy.orm import joinedload
 from backend import db
 from backend.api import api
-from backend.models import Survey, SearchResult, Search, SurveyField, Tag
+from backend.models import Survey, SearchResult, Search, SurveyField, Tag, ResultField
 from utils import my_jsonify, paginate_marshaller
 from io import BytesIO
 
@@ -20,6 +20,7 @@ def get_survey_results(survey_id):
     .filter(Survey.id_ == survey_id)
     .options(joinedload(Survey.fields))
     .options(joinedload(Survey.search_results).joinedload(SearchResult.result_fields))
+    .order_by(ResultField.id_.desc())
     .first()
   )
 
