@@ -46,7 +46,7 @@ def get_survey_results(survey_id):
         'visible_link': search_result.visible_link.encode('utf-8'),
         'direct_link': search_result.direct_link.encode('utf-8'),
     }
-    for result_field in search_result.result_fields:
+    for result_field in sorted(search_result.result_fields, key=lambda rf: rf.id_):
       label = result_field.survey_field.label
       value = result_field.value
       if result_field.survey_field.field_type == 'location':
