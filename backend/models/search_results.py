@@ -19,14 +19,14 @@ class SearchResult(db.Model, Entity):
     'completion_state': fields.String,
   }
 
-  user_id = Column(Integer, ForeignKey('users.id_'))
+  user_id = Column(Integer, ForeignKey('users.id_'), nullable=False)
   user = relationship('User')
 
-  search_id = Column(Integer, ForeignKey('searches.id_'))
+  search_id = Column(Integer, ForeignKey('searches.id_'), nullable=False)
   search = relationship('Search')
 
-  visible_link = Column(String)
-  direct_link = Column(String)
+  visible_link = Column(String, nullable=False)
+  direct_link = Column(String, nullable=False)
 
   class ImageScrapedStates:
     NEW = 'NEW'
@@ -34,8 +34,8 @@ class SearchResult(db.Model, Entity):
     SUCCESS = 'SUCCESS'
     FAILURE = 'FAILURE'
 
-  image_scraped_state = Column(String, default='NEW')
-  image_id = Column(Integer, ForeignKey('images.id_'))
+  image_scraped_state = Column(String, default='NEW', nullable=False)
+  image_id = Column(Integer, ForeignKey('images.id_'), nullable=False)
   image = relationship('Image')
 
   class CompletionStates:
@@ -43,7 +43,7 @@ class SearchResult(db.Model, Entity):
     REVISIT = 'REVISIT'
     DONE = 'DONE'
 
-  completion_state = Column(String, default=CompletionStates.REVISIT)
+  completion_state = Column(String, default=CompletionStates.REVISIT, nullable=False)
 
   tags = relationship('Tag')
 

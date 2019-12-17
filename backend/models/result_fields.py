@@ -12,10 +12,10 @@ class ResultField(db.Model, Entity):
     'survey_field_id': fields.Integer,
     'value': fields.String,
   }
-  search_result_id = Column(Integer, ForeignKey('search_results.id_'))
+  search_result_id = Column(Integer, ForeignKey('search_results.id_'), nullable=False)
   search_result = relationship('SearchResult')
 
-  survey_field_id = Column(Integer, ForeignKey('survey_fields.id_'))
+  survey_field_id = Column(Integer, ForeignKey('survey_fields.id_'), nullable=False)
   survey_field = relationship('SurveyField')
 
-  value = Column(String)
+  value = Column(String, nullable=False)

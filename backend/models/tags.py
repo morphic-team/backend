@@ -12,7 +12,7 @@ class Tag(db.Model, Entity):
     'value': fields.String,
   }
 
-  search_result_id = Column(Integer, ForeignKey('search_results.id_'))
+  search_result_id = Column(Integer, ForeignKey('search_results.id_'), nullable=False)
   search_result = relationship('SearchResult')
-  
+
   value = Column(String)

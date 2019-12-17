@@ -13,7 +13,7 @@ class SurveyField(db.Model, Entity):
     'options': fields.List(fields.String),
   }
 
-  survey_id = Column(Integer, ForeignKey('surveys.id_'))
+  survey_id = Column(Integer, ForeignKey('surveys.id_'), nullable=False)
   survey = relationship('Survey')
 
   label = Column(String)

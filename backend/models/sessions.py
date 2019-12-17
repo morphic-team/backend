@@ -9,5 +9,5 @@ class Session(db.Model, Entity):
   __tablename__ = 'sessions'
   marshaller = {'id_': fields.Integer}
 
-  user_id = Column(Integer, ForeignKey('users.id_'))
+  user_id = Column(Integer, ForeignKey('users.id_'), nullable=False)
   user = relationship('User')

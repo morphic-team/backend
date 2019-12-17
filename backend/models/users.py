@@ -9,11 +9,11 @@ class User(db.Model, Entity):
   __tablename__ = 'users'
 
   marshaller = {'id_': fields.Integer, 'email_address': fields.String}
-  
-  email_address = Column(String)
 
-  password_hash = Column(String)
-  password_salt = Column(String)
+  email_address = Column(String, nullable=False)
+
+  password_hash = Column(String, nullable=False)
+  password_salt = Column(String, nullable=False)
 
   surveys = relationship('Survey')
   searches = relationship('Search', secondary="surveys")

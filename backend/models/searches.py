@@ -15,15 +15,15 @@ class Search(db.Model, Entity):
     'are_results_uploaded': fields.Boolean,
   }
 
-  are_results_uploaded = Column(Boolean, default=False) 
+  are_results_uploaded = Column(Boolean, default=False, nullable=False)
 
-  survey_id = Column(Integer, ForeignKey('surveys.id_'))
+  survey_id = Column(Integer, ForeignKey('surveys.id_'), nullable=False)
   survey = relationship('Survey')
 
   results = relationship('SearchResult')
 
-  name = Column(String)
+  name = Column(String, nullable=False)
+
+  search_query = Column(String, nullable=False)
 
   comments = Column(String)
-
-  search_query = Column(String)
