@@ -44,9 +44,8 @@ def update_search_result(search_result_id):
       .first()
     )
     result_field = (ResultField.query
-      .join(SurveyField)
-      .filter(SurveyField.survey==survey_field)
-      .filter(SurveyField.label==field_label)
+      .filter(ResultField.search_result==search_result)
+      .filter(ResultField.survey_field==survey_field)
       .first()
     )
     if result_field is None:

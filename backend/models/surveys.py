@@ -14,13 +14,13 @@ class Survey(db.Model, Entity):
     'comments': fields.String,
   }
 
-  name = Column(String)
+  name = Column(String, nullable=False)
   comments = Column(String)
 
-  user_id = Column(Integer, ForeignKey('users.id_'))
+  user_id = Column(Integer, ForeignKey('users.id_'), nullable=False)
   user = relationship('User')
 
   searches = relationship('Search')
   search_results = relationship('SearchResult', secondary='searches', order_by='SearchResult.id_')
-  
+
   fields = relationship('SurveyField')
