@@ -25,8 +25,8 @@ def dedup():
 
 @manager.command
 def background_work():
+	from backend.background_work import do_work
 	app = create_app('prod')
-	from background_work import do_work
 	do_work()
 
 def _make_context():
