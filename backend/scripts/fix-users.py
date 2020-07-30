@@ -51,6 +51,7 @@ for none_user in none_users:
 
 
 # Build general purpose datastructures.
+from collections import defaultdict, Counter
 all_users = User.query.all()
 user_map = defaultdict(lambda: list())
 user_counter = Counter()
@@ -103,6 +104,8 @@ USERS_TO_DELETE = [
     62,
     309,
     291,
+    344,
+    343,
 ]
 
 def do():
