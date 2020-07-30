@@ -10,7 +10,7 @@ class User(db.Model, Entity):
 
   marshaller = {'id_': fields.Integer, 'email_address': fields.String}
 
-  email_address = Column(String, nullable=False)
+  email_address = Column(String, nullable=False, unique=True)
 
   password_hash = Column(String, nullable=False)
   password_salt = Column(String, nullable=False)
