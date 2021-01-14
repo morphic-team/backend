@@ -19,9 +19,6 @@ class SearchResult(db.Model, Entity):
     'completion_state': fields.String,
   }
 
-  user_id = Column(Integer, ForeignKey('users.id_'), nullable=False)
-  user = relationship('User')
-
   search_id = Column(Integer, ForeignKey('searches.id_'), nullable=False)
   search = relationship('Search')
 
