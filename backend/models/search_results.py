@@ -11,7 +11,6 @@ class SearchResult(db.Model, Entity):
     'id_': fields.Integer,
     'next_id': fields.Integer,
     'previous_id': fields.Integer,
-    'user_id': fields.Integer,
     'search_id': fields.Integer,
     'image_id': fields.Integer,
     'visible_link': fields.String,
@@ -52,7 +51,6 @@ class SearchResult(db.Model, Entity):
         SearchResult
         .query
         .filter(SearchResult.search==self.search)
-        .filter(SearchResult.user==self.user)
         .filter(SearchResult.id_>self.id_)
         .order_by(SearchResult.id_)
         .first()
@@ -65,7 +63,6 @@ class SearchResult(db.Model, Entity):
         SearchResult
         .query
         .filter(SearchResult.search==self.search)
-        .filter(SearchResult.user==self.user)
         .filter(SearchResult.id_<self.id_)
         .order_by(SearchResult.id_.desc())
         .first()
