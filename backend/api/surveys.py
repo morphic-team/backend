@@ -47,8 +47,8 @@ def get_survey_results(survey_id):
         'direct_link': search_result.direct_link.encode('utf-8'),
     }
     for result_field in sorted(search_result.result_fields, key=lambda rf: rf.id_):
-      label = result_field.survey_field.label
-      value = result_field.value
+      label = result_field.survey_field.label or ''
+      value = result_field.value or ''
       if result_field.survey_field.field_type == 'location':
           location_dict = json.loads(value)
           value = '%s, %s' % (location_dict['latitude'], location_dict['longitude'])
