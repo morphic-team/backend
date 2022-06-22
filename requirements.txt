@@ -13,7 +13,7 @@ ImageHash==4.1.0
 itsdangerous==0.24
 Jinja2==2.7.3
 MarkupSafe==0.23
-numpy==1.16.6
+numpy==1.22.0
 packaging==16.8
 Pillow==6.2.2
 psycopg2==2.7.1
