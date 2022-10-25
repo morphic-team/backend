@@ -1,3 +1,6 @@
+import bcrypt
+
+
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 from flask.ext.restful import fields
@@ -19,10 +22,11 @@ class User(db.Model, Entity):
   searches = relationship('Search', secondary="surveys")
 
   def set_password(self, password):
-    self.password_hash = password
+    self.password_salt = bcrypt.gensalt()
+    self.password_hash = bcrypt.hashpw(password.encode('utf-8'), self.password_salt)
 
   def has_password(self, password):
-    return self.password_hash == password
+    return self.password_hash == bcrypt.hashpw(password.encode('utf-8'), self.password_salt)
 
   def create_new_session(self):
     session = Session(user=self)
