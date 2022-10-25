@@ -26,7 +26,7 @@ class User(db.Model, Entity):
     self.password_hash = bcrypt.hashpw(password.encode('utf-8'), self.password_salt)
 
   def has_password(self, password):
-    return self.password_hash == bcrypt.hashpw(password.encode('utf-8'), self.password_salt)
+    return self.password_hash == bcrypt.hashpw(password.encode('utf-8'), self.password_salt.encode('utf-8'))
 
   def create_new_session(self):
     session = Session(user=self)
