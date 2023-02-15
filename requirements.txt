@@ -19,4 +19,4 @@ six==1.10.0
 SQLAlchemy==1.1.9
 unicodecsv==0.14.1
 virtualenv==15.1.0
-Werkzeug==0.10.4
+Werkzeug==2.2.3
