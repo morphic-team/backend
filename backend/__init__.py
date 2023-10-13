@@ -25,6 +25,6 @@ def create_app(environment='dev'):
   from backend.api import api
   app.after_request(add_cors)
 
-  app.register_blueprint(api)
+  app.register_blueprint(api, url_prefix="/api")
 
   return app
