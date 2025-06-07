@@ -1,12 +1,13 @@
-from flask import abort
+from flask import abort, Blueprint
 from flask_restful import fields, marshal_with, reqparse
 from backend import db
-from backend.api import api
 from backend.models import User, Session
 from backend.api.utils import my_jsonify
 
+sessions_bp = Blueprint('sessions', __name__)
 
-@api.route('/sessions', methods=["POST"])
+
+@sessions_bp.route('/sessions', methods=["POST"])
 @my_jsonify
 @marshal_with({'user': fields.Nested(User.marshaller), 'session': fields.Nested(Session.marshaller)})
 def create_session():

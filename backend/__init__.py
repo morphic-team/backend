@@ -23,8 +23,7 @@ def create_app(environment="dev"):
 
     db.init_app(app)
 
-    from backend.api import api
-
-    app.register_blueprint(api, url_prefix="/api")
+    from backend.api import register_blueprints
+    register_blueprints(app)
 
     return app

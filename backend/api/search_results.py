@@ -1,11 +1,13 @@
+from flask import Blueprint
 from flask_restful import marshal_with, fields, reqparse, marshal
 from backend import db
 from backend.models import SearchResult, ResultField, SurveyField, Tag, Search
-from backend.api import api
 from backend.api.utils import my_jsonify
 
+search_results_bp = Blueprint('search_results', __name__)
 
-@api.route('/search_results/<int:search_result_id>')
+
+@search_results_bp.route('/search_results/<int:search_result_id>')
 @my_jsonify
 def get_search_result(search_result_id):
   # joined load onto image, tags, survey and survey_result_fields.
@@ -24,7 +26,7 @@ def get_search_result(search_result_id):
   search_result.field_values = field_values
   return marshal(search_result, marshaller)
 
-@api.route('/search_results/<int:search_result_id>', methods=['PATCH'])
+@search_results_bp.route('/search_results/<int:search_result_id>', methods=['PATCH'])
 @my_jsonify
 @marshal_with(SearchResult.marshaller)
 def update_search_result(search_result_id):

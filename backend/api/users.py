@@ -1,14 +1,14 @@
 import json
 from functools import wraps
-from flask import jsonify
+from flask import Blueprint, jsonify
 from flask_restful import marshal_with, fields, reqparse
 from backend import db
-from backend.api import api
 from backend.models import Survey, User, Session, SurveyField
 from backend.api.utils import my_jsonify, paginate_marshaller
 
+users_bp = Blueprint('users', __name__)
 
-@api.route('/users', methods=["POST"])
+@users_bp.route('/users', methods=["POST"])
 @my_jsonify
 @marshal_with({'user': fields.Nested(User.marshaller), 'session': fields.Nested(Session.marshaller)})
 def sign_up():
@@ -28,7 +28,7 @@ def sign_up():
 
   return {'user': user, 'session': session}
 
-@api.route('/users/<int:user_id>/surveys')
+@users_bp.route('/users/<int:user_id>/surveys')
 @my_jsonify
 @marshal_with(paginate_marshaller(Survey.marshaller))
 def get_users_surveys(user_id):
@@ -37,7 +37,7 @@ def get_users_surveys(user_id):
     'results': users_surveys
   }
 
-@api.route('/users/<int:user_id>/surveys', methods=['POST'])
+@users_bp.route('/users/<int:user_id>/surveys', methods=['POST'])
 @my_jsonify
 @marshal_with(Survey.marshaller)
 def user_create_survey(user_id):

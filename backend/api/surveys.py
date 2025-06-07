@@ -1,15 +1,16 @@
 import json
 import unicodecsv
-from flask import send_file
+from flask import send_file, Blueprint
 from flask_restful import marshal_with, reqparse, fields
 from sqlalchemy.orm import joinedload
 from backend import db
-from backend.api import api
 from backend.models import Survey, SearchResult, Search, SurveyField, Tag, ResultField
 from backend.api.utils import my_jsonify, paginate_marshaller
 from io import BytesIO
 
-@api.route('/surveys/<int:survey_id>/export-results')
+surveys_bp = Blueprint('surveys', __name__)
+
+@surveys_bp.route('/surveys/<int:survey_id>/export-results')
 def get_survey_results(survey_id):
   #TODO: joinedload .fields, .search_results and
   # search_result.result_fields and use a local cache
@@ -64,7 +65,7 @@ def get_survey_results(survey_id):
 
 m = {'fields': fields.Nested(SurveyField.marshaller)}
 m.update(Survey.marshaller)
-@api.route('/surveys/<int:survey_id>')
+@surveys_bp.route('/surveys/<int:survey_id>')
 @my_jsonify
 @marshal_with(m)
 def get_survey(survey_id):
@@ -80,7 +81,7 @@ def get_survey(survey_id):
   survey.fields = deserialized_fields
   return survey
 
-@api.route('/surveys/<int:survey_id>/search_results')
+@surveys_bp.route('/surveys/<int:survey_id>/search_results')
 @my_jsonify
 @marshal_with(paginate_marshaller(SearchResult.marshaller))
 def get_surveys_search_results(survey_id):
@@ -115,7 +116,7 @@ def get_surveys_search_results(survey_id):
     'limit': args.per_page,
   }
 
-@api.route('/surveys/<int:survey_id>/searches')
+@surveys_bp.route('/surveys/<int:survey_id>/searches')
 @my_jsonify
 @marshal_with(paginate_marshaller(Search.marshaller))
 def get_surveys_searches(survey_id):
@@ -126,7 +127,7 @@ def get_surveys_searches(survey_id):
     'results': searches
   }
 
-@api.route('/surveys/<int:survey_id>/tags')
+@surveys_bp.route('/surveys/<int:survey_id>/tags')
 @my_jsonify
 @marshal_with(paginate_marshaller(Tag.marshaller))
 def get_surveys_tags(survey_id):
@@ -138,7 +139,7 @@ def get_surveys_tags(survey_id):
 
   return {'results': [Tag(value=value) for value in seen]}
 
-@api.route('/surveys/<int:survey_id>/searches', methods=['POST'])
+@surveys_bp.route('/surveys/<int:survey_id>/searches', methods=['POST'])
 @my_jsonify
 @marshal_with(Search.marshaller)
 def create_search(survey_id):

@@ -1,10 +1,12 @@
 from backend.models import Search
-from backend.api import api
+from flask import Blueprint
 from flask_restful import marshal_with
 from backend.api.utils import my_jsonify
 
+searches_bp = Blueprint('searches', __name__)
 
-@api.route('/searches/<int:search_id>')
+
+@searches_bp.route('/searches/<int:search_id>')
 @my_jsonify
 @marshal_with(Search.marshaller)
 def get_search(search_id):

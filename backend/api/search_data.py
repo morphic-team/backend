@@ -1,12 +1,13 @@
-from flask import abort
+from flask import abort, Blueprint
 from flask_restful import reqparse
 from backend import db
-from backend.api import api
 from backend.models import User, Search, SearchResult
 import json
 
+search_data_bp = Blueprint('search_data', __name__)
 
-@api.route('/upload-google-results', methods=['POST'])
+
+@search_data_bp.route('/upload-google-results', methods=['POST'])
 def upload_search_data():
   parser = reqparse.RequestParser()
   parser.add_argument('morphic_id', type=int)
