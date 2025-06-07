@@ -2,8 +2,10 @@ import os
 import sentry_sdk
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 db = SQLAlchemy()
+migrate = Migrate()
 
 sentry_sdk.init(
     dsn="https://9eeb4684dc1ab49e736b24f3bbc8c789@sentry.morphs.io/2",
@@ -22,6 +24,7 @@ def create_app(environment="dev"):
     app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
     db.init_app(app)
+    migrate.init_app(app, db)
 
     from backend.api import register_blueprints
     register_blueprints(app)

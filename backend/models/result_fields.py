@@ -7,6 +7,12 @@ from backend.models import Entity
 
 class ResultField(db.Model, Entity):
   __tablename__ = 'result_fields'
+  
+  # NOTE: This model has a "diamond dependency" issue where result_fields
+  # could theoretically reference SearchResult and SurveyField from different surveys.
+  # See docs/DATA_MODEL.md for details. No database constraint is currently feasible.
+  # Solution: Be careful in application logic when creating ResultFields.
+  
   marshaller = {
     'search_result_id': fields.Integer,
     'survey_field_id': fields.Integer,
