@@ -14,8 +14,10 @@ class SurveyField(db.Model, Entity):
   }
 
   survey_id = Column(Integer, ForeignKey('surveys.id_'), nullable=False)
-  survey = relationship('Survey')
+  survey = relationship('Survey', back_populates='fields')
 
   label = Column(String)
   field_type = Column(String)
   options = Column(String)
+
+  result_fields = relationship('ResultField', back_populates='survey_field')

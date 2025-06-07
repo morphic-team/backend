@@ -19,7 +19,7 @@ class SearchResult(db.Model, Entity):
   }
 
   search_id = Column(Integer, ForeignKey('searches.id_'), nullable=False)
-  search = relationship('Search')
+  search = relationship('Search', back_populates='results')
 
   visible_link = Column(String, nullable=False)
   direct_link = Column(String, nullable=False)
@@ -41,9 +41,9 @@ class SearchResult(db.Model, Entity):
 
   completion_state = Column(String, default=CompletionStates.REVISIT, nullable=False)
 
-  tags = relationship('Tag')
+  tags = relationship('Tag', back_populates='search_result')
 
-  result_fields = relationship('ResultField')
+  result_fields = relationship('ResultField', back_populates='search_result')
 
   @property
   def next_id(self):

@@ -13,6 +13,6 @@ class Tag(db.Model, Entity):
   }
 
   search_result_id = Column(Integer, ForeignKey('search_results.id_'), nullable=False)
-  search_result = relationship('SearchResult')
+  search_result = relationship('SearchResult', back_populates='tags')
 
   value = Column(String)

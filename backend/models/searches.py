@@ -18,9 +18,9 @@ class Search(db.Model, Entity):
   are_results_uploaded = Column(Boolean, default=False, nullable=False)
 
   survey_id = Column(Integer, ForeignKey('surveys.id_'), nullable=False)
-  survey = relationship('Survey')
+  survey = relationship('Survey', back_populates='searches')
 
-  results = relationship('SearchResult')
+  results = relationship('SearchResult', back_populates='search')
 
   name = Column(String, nullable=False)
 

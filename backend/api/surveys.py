@@ -12,17 +12,28 @@ surveys_bp = Blueprint('surveys', __name__)
 
 @surveys_bp.route('/surveys/<int:survey_id>/export-results')
 def get_survey_results(survey_id):
-  #TODO: joinedload .fields, .search_results and
-  # search_result.result_fields and use a local cache
-  # of survey_fields to get survey_field.label by id.
+  # Get survey with fields
   survey = (
     Survey
     .query
     .filter(Survey.id_ == survey_id)
     .options(joinedload(Survey.fields))
-    .options(joinedload(Survey.search_results).joinedload(SearchResult.result_fields))
-    .order_by(ResultField.id_.desc())
     .first()
+  )
+  
+  if not survey:
+    return {'error': 'Survey not found'}, 404
+
+  # Get all search results for this survey using proper joins
+  search_results = (
+    SearchResult
+    .query
+    .join(Search)
+    .filter(Search.survey_id == survey_id)
+    .options(joinedload(SearchResult.result_fields))
+    .options(joinedload(SearchResult.search))
+    .order_by(SearchResult.id_.desc())
+    .all()
   )
 
   field_names = ['morphic_id', 'completion_state']
@@ -38,7 +49,7 @@ def get_survey_results(survey_id):
   writer = unicodecsv.DictWriter(f, field_names, encoding='utf-8')
   writer.writeheader()
 
-  for search_result in survey.search_results:
+  for search_result in search_results:
     d = {
         'morphic_id': search_result.id_,
         'completion_state': search_result.completion_state,

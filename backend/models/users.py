@@ -18,8 +18,7 @@ class User(db.Model, Entity):
   password_hash = Column(String, nullable=False)
   password_salt = Column(String, nullable=False)
 
-  surveys = relationship('Survey')
-  searches = relationship('Search', secondary="surveys")
+  surveys = relationship('Survey', back_populates='user')
 
   def set_password(self, password):
     self.password_salt = bcrypt.gensalt()

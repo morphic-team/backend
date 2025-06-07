@@ -18,9 +18,7 @@ class Survey(db.Model, Entity):
   comments = Column(String)
 
   user_id = Column(Integer, ForeignKey('users.id_'), nullable=False)
-  user = relationship('User')
+  user = relationship('User', back_populates='surveys')
 
-  searches = relationship('Search')
-  search_results = relationship('SearchResult', secondary='searches', order_by='SearchResult.id_')
-
-  fields = relationship('SurveyField')
+  searches = relationship('Search', back_populates='survey')
+  fields = relationship('SurveyField', back_populates='survey')
