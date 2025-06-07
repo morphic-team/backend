@@ -1,0 +1,30 @@
+# Web Framework
+Flask
+Flask-RESTful
+Flask-Script
+Flask-SQLAlchemy
+SQLAlchemy
+
+# Database
+psycopg2
+
+# Security
+bcrypt
+
+# External services
+requests
+sentry-sdk
+
+# Image processing
+ImageHash
+Pillow
+
+# Scientific computing
+scipy
+PyWavelets
+
+# Utilities
+unicodecsv
+
+# Server
+gunicorn

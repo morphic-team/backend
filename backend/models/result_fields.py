@@ -1,4 +1,4 @@
-from flask.ext.restful import fields
+from flask_restful import fields
 from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
 from backend import db

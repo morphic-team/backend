@@ -1,11 +1,11 @@
 import json
 from functools import wraps
 from flask import jsonify
-from flask.ext.restful import marshal_with, fields, reqparse
+from flask_restful import marshal_with, fields, reqparse
 from backend import db
 from backend.api import api
 from backend.models import Survey, User, Session, SurveyField
-from utils import my_jsonify, paginate_marshaller
+from backend.api.utils import my_jsonify, paginate_marshaller
 
 
 @api.route('/users', methods=["POST"])

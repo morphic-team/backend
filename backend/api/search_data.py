@@ -1,5 +1,5 @@
 from flask import abort
-from flask.ext.restful import reqparse
+from flask_restful import reqparse
 from backend import db
 from backend.api import api
 from backend.models import User, Search, SearchResult

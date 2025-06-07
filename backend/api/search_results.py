@@ -1,8 +1,8 @@
-from flask.ext.restful import marshal_with, fields, reqparse, marshal
+from flask_restful import marshal_with, fields, reqparse, marshal
 from backend import db
 from backend.models import SearchResult, ResultField, SurveyField, Tag, Search
 from backend.api import api
-from utils import my_jsonify
+from backend.api.utils import my_jsonify
 
 
 @api.route('/search_results/<int:search_result_id>')

@@ -5,12 +5,12 @@ from backend import db
 class Entity(object):
   id_ = Column(Integer, primary_key=True)
 
-from sessions import Session
-from users import User
-from surveys import Survey
-from tags import Tag
-from survey_fields import SurveyField
-from searches import Search
-from images import Image
-from search_results import SearchResult
-from result_fields import ResultField
+from backend.models.sessions import Session
+from backend.models.users import User
+from backend.models.surveys import Survey
+from backend.models.tags import Tag
+from backend.models.survey_fields import SurveyField
+from backend.models.searches import Search
+from backend.models.images import Image
+from backend.models.search_results import SearchResult
+from backend.models.result_fields import ResultField

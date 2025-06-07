@@ -3,7 +3,7 @@ import bcrypt
 
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
-from flask.ext.restful import fields
+from flask_restful import fields
 from backend import db
 from backend.models import Entity, Session
 

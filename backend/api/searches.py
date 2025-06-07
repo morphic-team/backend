@@ -1,7 +1,7 @@
 from backend.models import Search
 from backend.api import api
-from flask.ext.restful import marshal_with
-from utils import my_jsonify
+from flask_restful import marshal_with
+from backend.api.utils import my_jsonify
 
 
 @api.route('/searches/<int:search_id>')

@@ -1,4 +1,4 @@
-from google_images_serp_parser import googleImagesSERPParser
+from backend.google_images_serp_parser import googleImagesSERPParser
 
 
 class TestGoogleImagesSERPParser(unittest.TestCase):

@@ -1,12 +1,12 @@
 import json
 import unicodecsv
 from flask import send_file
-from flask.ext.restful import marshal_with, reqparse, fields
+from flask_restful import marshal_with, reqparse, fields
 from sqlalchemy.orm import joinedload
 from backend import db
 from backend.api import api
 from backend.models import Survey, SearchResult, Search, SurveyField, Tag, ResultField
-from utils import my_jsonify, paginate_marshaller
+from backend.api.utils import my_jsonify, paginate_marshaller
 from io import BytesIO
 
 @api.route('/surveys/<int:survey_id>/export-results')

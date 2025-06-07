@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from flask.ext.restful import fields
+from flask_restful import fields
 from backend import db
 from backend.models import Entity
 

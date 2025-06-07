@@ -1,6 +1,6 @@
 import json
 from functools import wraps
-from flask.ext.restful import fields
+from flask_restful import fields
 
 
 def paginate_marshaller(m):

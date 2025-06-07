@@ -1,9 +1,9 @@
 from flask import abort
-from flask.ext.restful import fields, marshal_with, reqparse
+from flask_restful import fields, marshal_with, reqparse
 from backend import db
 from backend.api import api
 from backend.models import User, Session
-from utils import my_jsonify
+from backend.api.utils import my_jsonify
 
 
 @api.route('/sessions', methods=["POST"])
