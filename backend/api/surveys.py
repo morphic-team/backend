@@ -10,6 +10,15 @@ from io import BytesIO
 
 surveys_bp = Blueprint('surveys', __name__)
 
+def normalize_field_name(label):
+  """Normalize field labels for CSV headers by replacing problematic characters"""
+  import re
+  # Remove or replace problematic characters
+  normalized = re.sub(r'[^\w\s-]', '', label)  # Remove non-alphanumeric except spaces and hyphens
+  normalized = re.sub(r'\s+', '_', normalized)  # Replace spaces with underscores
+  normalized = normalized.lower().strip('_')  # Lowercase and trim underscores
+  return normalized
+
 @surveys_bp.route('/surveys/<int:survey_id>/export-results')
 def get_survey_results(survey_id):
   # Get survey with fields
@@ -41,7 +50,7 @@ def get_survey_results(survey_id):
       label = field.label
       if field.field_type == 'location':
           label += " (lat, lon)"
-      field_names.append(label.encode('utf-8'))
+      field_names.append(normalize_field_name(label))
   field_names += ['search_name', 'search_query', 'visible_link', 'direct_link']
 
   f = BytesIO()
@@ -55,8 +64,8 @@ def get_survey_results(survey_id):
         'completion_state': search_result.completion_state,
         'search_name': search_result.search.name,
         'search_query': search_result.search.search_query,
-        'visible_link': search_result.visible_link.encode('utf-8'),
-        'direct_link': search_result.direct_link.encode('utf-8'),
+        'visible_link': search_result.visible_link,
+        'direct_link': search_result.direct_link,
     }
     for result_field in sorted(search_result.result_fields, key=lambda rf: rf.id_):
       label = result_field.survey_field.label or ''
@@ -66,7 +75,7 @@ def get_survey_results(survey_id):
           value = '%s, %s' % (location_dict['latitude'], location_dict['longitude'])
           label += " (lat, lon)"
 
-      d[label.encode('utf-8')] = value.encode('utf-8')
+      d[normalize_field_name(label)] = value
     writer.writerow(d)
 
   f.seek(0)

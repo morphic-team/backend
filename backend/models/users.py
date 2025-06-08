@@ -21,11 +21,14 @@ class User(db.Model, Entity):
   surveys = relationship('Survey', back_populates='user')
 
   def set_password(self, password):
-    self.password_salt = bcrypt.gensalt()
-    self.password_hash = bcrypt.hashpw(password.encode('utf-8'), self.password_salt)
+    salt_bytes = bcrypt.gensalt()
+    hash_bytes = bcrypt.hashpw(password.encode('utf-8'), salt_bytes)
+    # Store as proper strings (like production), not byte representations
+    self.password_salt = salt_bytes.decode('utf-8')
+    self.password_hash = hash_bytes.decode('utf-8')
 
   def has_password(self, password):
-    return self.password_hash == bcrypt.hashpw(password.encode('utf-8'), self.password_salt.encode('utf-8'))
+    return self.password_hash.encode('utf-8') == bcrypt.hashpw(password.encode('utf-8'), self.password_salt.encode('utf-8'))
 
   def create_new_session(self):
     session = Session(user=self)
