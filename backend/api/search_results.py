@@ -8,11 +8,8 @@ from backend.api.utils import my_jsonify
 search_results_bp = Blueprint('search_results', __name__)
 
 
-@search_results_bp.route('/search_results/<int:search_result_id>')
-@my_jsonify
-def get_search_result(search_result_id):
-  # joined load onto image, tags, survey and survey_result_fields.
-  search_result = SearchResult.query.filter(SearchResult.id_==search_result_id).first()
+def build_detailed_search_result_response(search_result):
+  """Build detailed search result response with field values, search info, and duplicate pool"""
   marshaller = SearchResult.detail_marshaller.copy()
 
   field_values = {}
@@ -39,9 +36,15 @@ def get_search_result(search_result_id):
   search_result.field_values = field_values
   return marshal(search_result, marshaller)
 
+
+@search_results_bp.route('/search_results/<int:search_result_id>')
+@my_jsonify
+def get_search_result(search_result_id):
+  search_result = SearchResult.query.filter(SearchResult.id_==search_result_id).first()
+  return build_detailed_search_result_response(search_result)
+
 @search_results_bp.route('/search_results/<int:search_result_id>', methods=['PATCH'])
 @my_jsonify
-@marshal_with(SearchResult.marshaller)
 def update_search_result(search_result_id):
   parser = reqparse.RequestParser()
   parser.add_argument('completion_state', type=str)
@@ -90,4 +93,4 @@ def update_search_result(search_result_id):
   db.session.add(search_result)
   db.session.commit()
 
-  return search_result
+  return build_detailed_search_result_response(search_result)
