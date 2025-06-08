@@ -1,6 +1,6 @@
 import json
 import unicodecsv
-from flask import send_file, Blueprint
+from flask import send_file, Blueprint, request
 from flask_restful import marshal_with, reqparse, fields
 from sqlalchemy.orm import joinedload
 from backend import db
@@ -96,13 +96,12 @@ def get_survey(survey_id):
 @my_jsonify
 @marshal_with(paginate_marshaller(SearchResult.marshaller))
 def get_surveys_search_results(survey_id):
-  parser = reqparse.RequestParser()
-  parser.add_argument('filter', type=str, default=None)
-  parser.add_argument('per_page', type=int, default=60)
-  parser.add_argument('page', type=int, default=1)
-  args = parser.parse_args()
+  # Parse query parameters
+  filter_param = request.args.get('filter', None)
+  per_page = int(request.args.get('per_page', 60))
+  page = int(request.args.get('page', 1))
 
-  offset = args.per_page*args.page - args.per_page
+  offset = per_page * page - per_page
 
   search_results_query = (SearchResult.query
     .join(Search)
@@ -110,21 +109,21 @@ def get_surveys_search_results(survey_id):
     .order_by(SearchResult.id_)
   )
 
-  if args.filter:
+  if filter_param:
     search_results_query = (search_results_query
       .join(Tag)
-      .filter(Tag.value==args.filter)
+      .filter(Tag.value==filter_param)
     )
 
   return {
     'count': search_results_query.count(),
     'results': (search_results_query
-      .limit(args.per_page)
+      .limit(per_page)
       .offset(offset)
       .all()
     ),
     'offset': offset,
-    'limit': args.per_page,
+    'limit': per_page,
   }
 
 @surveys_bp.route('/surveys/<int:survey_id>/searches')
