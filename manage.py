@@ -1,8 +1,7 @@
-import os, sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 import click
 from backend import create_app, db
+import scripts.populate_mock_data
 
 app = create_app('dev')
 
@@ -50,6 +49,15 @@ def reload_database():
         db.drop_all()
         db.create_all()
         click.echo('Reloaded database.')
+
+@app.cli.command()
+@click.option('--user-id', required=True, type=int, help='User ID to populate mock survey for')
+@click.option('--num-searches', default=3, help='Number of searches to create (default: 3)')
+@click.option('--num-results', default=100, help='Number of results per search (default: 100)')
+def populate_mock_survey(user_id: int, num_searches: int, num_results: int) -> None:
+    """Populate database with a mock survey for a specified user"""
+    with app.app_context():
+        scripts.populate_mock_data.populate_mock_survey(user_id, num_searches, num_results)
 
 @app.shell_context_processor
 def make_shell_context():
