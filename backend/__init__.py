@@ -12,10 +12,18 @@ def create_app(environment="dev"):
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = "False"
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["SQLALCHEMY_DATABASE_URI"]
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
+    app.config["SQLALCHEMY_SESSION_OPTIONS"] = {"autoflush": False}
     app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
     db.init_app(app)
     migrate.init_app(app, db)
+    
+    # Force disable autoflush directly on the session
+    with app.app_context():
+        db.session.autoflush = False
+        print(f"SQLAlchemy session autoflush after manual set: {db.session.autoflush}")
+        print(f"App config SQLALCHEMY_SESSION_OPTIONS: {app.config.get('SQLALCHEMY_SESSION_OPTIONS')}")
 
     from backend.api import register_blueprints
     register_blueprints(app)

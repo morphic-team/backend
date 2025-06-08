@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint
 from flask_restful import marshal_with, fields, reqparse, marshal
 from backend import db
@@ -17,8 +18,9 @@ def get_search_result(search_result_id):
   field_values = {}
   field_values_marshaller = {}
   for result_field in search_result.result_fields:
-    field_values[result_field.survey_field.label] = result_field.value
-    field_values_marshaller[result_field.survey_field.label] = fields.String
+    field_id = str(result_field.survey_field.id_)
+    field_values[field_id] = result_field.value
+    field_values_marshaller[field_id] = fields.String
 
   marshaller['field_values'] = fields.Nested(field_values_marshaller)
   marshaller['search'] = fields.Nested(Search.marshaller)
@@ -39,12 +41,18 @@ def update_search_result(search_result_id):
   search_result.completion_state = args.completion_state
   survey = search_result.search.survey
 
-  for field_label, field_value in args.field_values.iteritems():
+  for field_id, field_value in args.field_values.items():
+    # Skip empty/null values
+    if field_value is None or field_value == '':
+      continue
+      
     survey_field = (SurveyField.query
-      .filter(SurveyField.label==field_label)
+      .filter(SurveyField.id_==int(field_id))
       .filter(SurveyField.survey==survey)
       .first()
     )
+    if not survey_field:
+      return {'error': f'Survey field not found: {field_id}'}, 400
     result_field = (ResultField.query
       .filter(ResultField.search_result==search_result)
       .filter(ResultField.survey_field==survey_field)
@@ -55,10 +63,17 @@ def update_search_result(search_result_id):
         search_result=search_result,
         survey_field=survey_field,
       )
-    result_field.value = field_value
+    # Serialize dict values (like location data) to JSON strings
+    if isinstance(field_value, dict):
+      result_field.value = json.dumps(field_value)
+    else:
+      result_field.value = field_value
 
     db.session.add(result_field)
 
+  # Flush to ensure all result_fields are persisted before updating tags
+  db.session.flush()
+  
   search_result.update_tags()
 
   db.session.add(search_result)

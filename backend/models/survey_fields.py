@@ -8,6 +8,7 @@ from backend.models import Entity
 class SurveyField(db.Model, Entity):
   __tablename__ = 'survey_fields'
   marshaller = {
+    'id_': fields.Integer,
     'label': fields.String,
     'field_type': fields.String,
     'options': fields.List(fields.String),
