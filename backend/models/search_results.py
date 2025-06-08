@@ -70,17 +70,29 @@ class SearchResult(db.Model, Entity):
     )
 
   def update_tags(self):
+    # TODO: Replace with efficient set difference SQL to avoid race conditions
+    # and database thrashing. Current approach deletes all tags then recreates,
+    # which has race conditions with concurrent users and is inefficient.
+    
+    # Delete existing tags for this search result
+    Tag.query.filter(Tag.search_result == self).delete()
+    
+    # Create new tags based on current state
     new_tags = []
 
     new_tags.append(Tag(
-      search_result=self,
       value='%s: %s' % ('completion_state', self.completion_state)
     ))
 
     for result_field in self.result_fields:
       new_tags.append(Tag(
-        search_result=self,
         value='%s: %s' % (result_field.survey_field.label, result_field.value),
       ))
 
-    self.tags = new_tags
+    # Add new tags to session first
+    for tag in new_tags:
+      db.session.add(tag)
+    
+    # Then set the relationship
+    for tag in new_tags:
+      tag.search_result = self
