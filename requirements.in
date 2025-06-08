@@ -14,7 +14,6 @@ bcrypt
 
 # External services
 requests
-sentry-sdk
 
 # Image processing
 ImageHash
