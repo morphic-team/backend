@@ -16,7 +16,16 @@ class SearchResult(db.Model, Entity):
     'visible_link': fields.String,
     'direct_link': fields.String,
     'completion_state': fields.String,
+    'duplicate_of_id': fields.Integer,
+    'image_scraped_state': fields.String,
     'tags': fields.List(fields.Nested(Tag.marshaller)),
+    'duplicates': fields.List(fields.Nested({
+      'id_': fields.Integer,
+      'visible_link': fields.String,
+      'direct_link': fields.String,
+      'completion_state': fields.String,
+      'image_scraped_state': fields.String,
+    })),
   }
 
   search_id = Column(Integer, ForeignKey('searches.id_'), nullable=False)
@@ -41,6 +50,10 @@ class SearchResult(db.Model, Entity):
     DONE = 'DONE'
 
   completion_state = Column(String, default=CompletionStates.REVISIT, nullable=False)
+
+  # Duplicate tracking - points to the canonical SearchResult this is a duplicate of
+  duplicate_of_id = Column(Integer, ForeignKey('search_results.id_'), nullable=True)
+  duplicate_of = relationship('SearchResult', remote_side='SearchResult.id_', backref='duplicates')
 
   tags = relationship('Tag', back_populates='search_result')
 

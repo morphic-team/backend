@@ -69,21 +69,24 @@ def do_unscraped_search_result(unscraped_search_result):
     done_scraping_image(unscraped_search_result, success=False)
     return
 
-  duplicate_pool = (
+  # Check for existing canonical result with same hash in same survey
+  canonical_result = (
     SearchResult.query
     .join(ImageModel)
     .join(Search)
     .filter(Search.survey == unscraped_search_result.search.survey)
     .filter(ImageModel.image_hash == unscraped_search_result.image.image_hash)
-    .all()
+    .filter(SearchResult.duplicate_of_id.is_(None))  # Find the canonical (not a duplicate itself)
+    .filter(SearchResult.id_ != unscraped_search_result.id_)  # Exclude current result
+    .first()
   )
 
-  if (len(duplicate_pool) > 1):
-      logger.warn("Removing duplicate: %s" % unscraped_search_result)
-      db.session.delete(unscraped_search_result)
-      db.session.commit()
-  else:
-    done_scraping_image(unscraped_search_result, success=True)
+  if canonical_result:
+      logger.warn("Marking as duplicate: %s -> canonical: %s" % (unscraped_search_result, canonical_result))
+      unscraped_search_result.completion_state = SearchResult.CompletionStates.NOT_USABLE
+      unscraped_search_result.duplicate_of_id = canonical_result.id_
+
+  done_scraping_image(unscraped_search_result, success=True)
 
 def do_work():
   while True:
