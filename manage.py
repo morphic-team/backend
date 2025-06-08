@@ -28,27 +28,6 @@ def background_work():
     with app.app_context():
         do_work()
 
-@app.cli.command()
-def create_all():
-    """Create all database tables"""
-    with app.app_context():
-        db.create_all()
-        click.echo('Created all tables.')
-
-@app.cli.command()
-def drop_all():
-    """Drop all database tables"""
-    with app.app_context():
-        db.drop_all()
-        click.echo('Dropped all tables.')
-
-@app.cli.command()
-def reload_database():
-    """Drop and recreate all database tables"""
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
-        click.echo('Reloaded database.')
 
 @app.cli.command()
 @click.option('--user-id', required=True, type=int, help='User ID to populate mock survey for')

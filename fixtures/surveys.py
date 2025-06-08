@@ -15,34 +15,29 @@ def create_mock_survey(user: User) -> Survey:
         SurveyField(
             label="Species Name",
             field_type="text",
-            # required=True,  # TODO: Add required field to SurveyField model
-            # order=1  # TODO: Add order field to SurveyField model
+            order=1
         ),
         SurveyField(
             label="Observation Location",
             field_type="location",
-            # required=True,  # TODO: Add required field to SurveyField model
-            # order=2  # TODO: Add order field to SurveyField model
+            order=2
         ),
         SurveyField(
             label="Behavior Observed",
             field_type="select",
             options='["Feeding", "Nesting", "Flying", "Resting", "Other"]',
-            # required=False,  # TODO: Add required field to SurveyField model
-            # order=3  # TODO: Add order field to SurveyField model
+            order=3
         ),
         SurveyField(
             label="Weather Conditions",
             field_type="radio",
             options='["Sunny", "Cloudy", "Rainy", "Windy"]',
-            # required=False,  # TODO: Add required field to SurveyField model
-            # order=4  # TODO: Add order field to SurveyField model
+            order=4
         ),
         SurveyField(
             label="Additional Notes",
             field_type="text",
-            # required=False,  # TODO: Add required field to SurveyField model
-            # order=5  # TODO: Add order field to SurveyField model
+            order=5
         )
     ]
     

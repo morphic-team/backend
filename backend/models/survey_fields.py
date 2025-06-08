@@ -12,6 +12,7 @@ class SurveyField(db.Model, Entity):
     'label': fields.String,
     'field_type': fields.String,
     'options': fields.List(fields.String),
+    'order': fields.Integer,
   }
 
   survey_id = Column(Integer, ForeignKey('surveys.id_'), nullable=False)
@@ -20,5 +21,6 @@ class SurveyField(db.Model, Entity):
   label = Column(String)
   field_type = Column(String)
   options = Column(String)
+  order = Column(Integer, nullable=False)
 
   result_fields = relationship('ResultField', back_populates='survey_field')
