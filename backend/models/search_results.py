@@ -16,6 +16,7 @@ class SearchResult(db.Model, Entity):
     'visible_link': fields.String,
     'direct_link': fields.String,
     'completion_state': fields.String,
+    'tags': fields.List(fields.Nested(Tag.marshaller)),
   }
 
   search_id = Column(Integer, ForeignKey('searches.id_'), nullable=False)
