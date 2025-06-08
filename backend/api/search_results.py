@@ -13,7 +13,7 @@ search_results_bp = Blueprint('search_results', __name__)
 def get_search_result(search_result_id):
   # joined load onto image, tags, survey and survey_result_fields.
   search_result = SearchResult.query.filter(SearchResult.id_==search_result_id).first()
-  marshaller = SearchResult.marshaller
+  marshaller = SearchResult.detail_marshaller.copy()
 
   field_values = {}
   field_values_marshaller = {}
@@ -24,6 +24,17 @@ def get_search_result(search_result_id):
 
   marshaller['field_values'] = fields.Nested(field_values_marshaller)
   marshaller['search'] = fields.Nested(Search.marshaller)
+
+  # Get all results in the same duplicate pool (always including self)
+  if search_result.duplicate_of_id:
+    # This is a duplicate - get canonical + all duplicates of same canonical
+    canonical = SearchResult.query.get(search_result.duplicate_of_id)
+    duplicates = SearchResult.query.filter(SearchResult.duplicate_of_id == search_result.duplicate_of_id).all()
+    search_result.duplicate_pool = [canonical] + duplicates
+  else:
+    # This is canonical - get self + all duplicates pointing to it
+    duplicates = SearchResult.query.filter(SearchResult.duplicate_of_id == search_result.id_).all()
+    search_result.duplicate_pool = [search_result] + duplicates
 
   search_result.field_values = field_values
   return marshal(search_result, marshaller)

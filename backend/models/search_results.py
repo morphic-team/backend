@@ -19,12 +19,28 @@ class SearchResult(db.Model, Entity):
     'duplicate_of_id': fields.Integer,
     'image_scraped_state': fields.String,
     'tags': fields.List(fields.Nested(Tag.marshaller)),
-    'duplicates': fields.List(fields.Nested({
+  }
+  
+  # Marshaller with duplicate pool for detail views
+  detail_marshaller = {
+    'id_': fields.Integer,
+    'next_id': fields.Integer,
+    'previous_id': fields.Integer,
+    'search_id': fields.Integer,
+    'image_id': fields.Integer,
+    'visible_link': fields.String,
+    'direct_link': fields.String,
+    'completion_state': fields.String,
+    'duplicate_of_id': fields.Integer,
+    'image_scraped_state': fields.String,
+    'tags': fields.List(fields.Nested(Tag.marshaller)),
+    'duplicate_pool': fields.List(fields.Nested({
       'id_': fields.Integer,
       'visible_link': fields.String,
       'direct_link': fields.String,
       'completion_state': fields.String,
       'image_scraped_state': fields.String,
+      'duplicate_of_id': fields.Integer,
     })),
   }
 
