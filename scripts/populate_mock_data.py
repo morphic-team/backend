@@ -46,13 +46,26 @@ def populate_mock_survey(user_id: int, num_searches: int, num_results: int) -> N
             
             click.echo(f"    Added {len(results)} search results")
         
+        # Commit to get IDs for all results
+        db.session.commit()
+        
+        # Now create duplicate pools across all searches
+        click.echo("Creating duplicate pools...")
+        all_results = []
+        for search in searches:
+            search_results = SearchResult.query.filter_by(search_id=search.id_).all()
+            all_results.extend(search_results)
+        
+        fixtures.results.create_duplicate_pools(all_results)
         db.session.commit()
         
         total_results = num_searches * num_results
+        duplicates_count = SearchResult.query.filter(SearchResult.duplicate_of_id.isnot(None)).count()
         click.echo(f"\nSuccessfully created:")
         click.echo(f"  - 1 survey with {len(survey.fields)} fields")
         click.echo(f"  - {num_searches} searches")
         click.echo(f"  - {total_results} total search results")
+        click.echo(f"  - {duplicates_count} results marked as duplicates with working image URLs")
         
     except Exception as e:
         db.session.rollback()
