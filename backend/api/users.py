@@ -57,6 +57,7 @@ def user_create_survey(user_id):
       survey=survey,
       label=survey_field_arg['label'],
       field_type=survey_field_arg['field_type'],
+      order=survey_field_arg.get('order', 1),
     )
     if 'options' in survey_field_arg:
       survey_field.options=json.dumps(survey_field_arg['options'])

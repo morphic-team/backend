@@ -83,11 +83,9 @@ def get_survey_results(survey_id):
   return send_file(f, mimetype='text/csv')
 
 
-m = {'fields': fields.Nested(SurveyField.marshaller)}
-m.update(Survey.marshaller)
 @surveys_bp.route('/surveys/<int:survey_id>')
 @my_jsonify
-@marshal_with(m)
+@marshal_with(Survey.marshaller)
 def get_survey(survey_id):
   # joined load onto survey, search, survey_fields and search_results and survey_result_fields.
   survey = Survey.query.filter(Survey.id_==survey_id).first()
