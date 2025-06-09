@@ -20,6 +20,7 @@ def create_session():
   if user and user.has_password(args.password):
     session = Session(user=user)
     db.session.add(session)
+    db.session.commit()  # Commit to generate ID and persist token
     return {
       'user': user,
       'session': session,
