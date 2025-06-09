@@ -121,6 +121,7 @@ def get_survey(survey_id):
 @marshal_with(paginate_marshaller(SearchResult.marshaller))
 def get_surveys_search_results(survey_id):
   # Parse query parameters
+  completion_state = request.args.get('completion_state', None)
   per_page = int(request.args.get('per_page', 60))
   page = int(request.args.get('page', 1))
 
@@ -131,6 +132,10 @@ def get_surveys_search_results(survey_id):
     .filter(Search.survey_id==survey_id)
     .order_by(SearchResult.id_)
   )
+  
+  # Filter by completion state if provided
+  if completion_state:
+    search_results_query = search_results_query.filter(SearchResult.completion_state==completion_state)
 
   return {
     'count': search_results_query.count(),
