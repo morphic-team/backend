@@ -56,10 +56,6 @@ def update_search_result(search_result_id):
   survey = search_result.search.survey
 
   for field_id, field_value in args.field_values.items():
-    # Skip empty/null values
-    if field_value is None or field_value == '':
-      continue
-      
     survey_field = (SurveyField.query
       .filter(SurveyField.id_==int(field_id))
       .filter(SurveyField.survey==survey)
@@ -67,11 +63,20 @@ def update_search_result(search_result_id):
     )
     if not survey_field:
       return {'error': f'Survey field not found: {field_id}'}, 400
+      
     result_field = (ResultField.query
       .filter(ResultField.search_result==search_result)
       .filter(ResultField.survey_field==survey_field)
       .first()
     )
+    
+    # Handle null/empty values by deleting the result field
+    if field_value is None or field_value == '':
+      if result_field is not None:
+        db.session.delete(result_field)
+      continue
+      
+    # Handle non-null values by creating or updating the result field
     if result_field is None:
       result_field = ResultField(
         search_result=search_result,
