@@ -85,19 +85,32 @@ def get_survey_results(survey_id):
 
 @surveys_bp.route('/surveys/<int:survey_id>')
 @my_jsonify
-@marshal_with(Survey.marshaller)
 def get_survey(survey_id):
   # joined load onto survey, search, survey_fields and search_results and survey_result_fields.
   survey = Survey.query.filter(Survey.id_==survey_id).first()
-  deserialized_fields = []
+  
+  if not survey:
+    return {'error': 'Survey not found'}, 404
+  
+  # Build response manually to handle JSON options field properly
+  result = {
+    'id_': survey.id_,
+    'name': survey.name,
+    'comments': survey.comments,
+    'fields': []
+  }
+  
   for field in survey.fields:
-    # Decode field.options if necessary.
-    if field.options:
-      field.options = json.loads(field.options)
-    deserialized_fields.append(field)
-
-  survey.fields = deserialized_fields
-  return survey
+    field_data = {
+      'id_': field.id_,
+      'label': field.label,
+      'field_type': field.field_type,
+      'order': field.order,
+      'options': json.loads(field.options) if field.options else []
+    }
+    result['fields'].append(field_data)
+  
+  return result
 
 @surveys_bp.route('/surveys/<int:survey_id>/search_results')
 @my_jsonify
