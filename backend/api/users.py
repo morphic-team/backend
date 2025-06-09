@@ -5,6 +5,7 @@ from flask_restful import marshal_with, fields, reqparse
 from backend import db
 from backend.models import Survey, User, Session, SurveyField
 from backend.api.utils import my_jsonify, paginate_marshaller
+from backend.auth import require_auth
 
 users_bp = Blueprint('users', __name__)
 
@@ -29,6 +30,7 @@ def sign_up():
   return {'user': user, 'session': session}
 
 @users_bp.route('/users/<int:user_id>/surveys')
+@require_auth
 @my_jsonify
 @marshal_with(paginate_marshaller(Survey.marshaller))
 def get_users_surveys(user_id):
@@ -38,6 +40,7 @@ def get_users_surveys(user_id):
   }
 
 @users_bp.route('/users/<int:user_id>/surveys', methods=['POST'])
+@require_auth
 @my_jsonify
 @marshal_with(Survey.marshaller)
 def user_create_survey(user_id):

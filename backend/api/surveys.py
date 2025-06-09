@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload
 from backend import db
 from backend.models import Survey, SearchResult, Search, SurveyField, Tag, ResultField
 from backend.api.utils import my_jsonify, paginate_marshaller
+from backend.auth import require_auth
 from io import BytesIO
 
 surveys_bp = Blueprint('surveys', __name__)
@@ -20,6 +21,7 @@ def normalize_field_name(label):
   return normalized
 
 @surveys_bp.route('/surveys/<int:survey_id>/export-results')
+@require_auth
 def get_survey_results(survey_id):
   # Get survey with fields
   survey = (
@@ -84,6 +86,7 @@ def get_survey_results(survey_id):
 
 
 @surveys_bp.route('/surveys/<int:survey_id>')
+@require_auth
 @my_jsonify
 def get_survey(survey_id):
   # joined load onto survey, search, survey_fields and search_results and survey_result_fields.
@@ -113,6 +116,7 @@ def get_survey(survey_id):
   return result
 
 @surveys_bp.route('/surveys/<int:survey_id>/search_results')
+@require_auth
 @my_jsonify
 @marshal_with(paginate_marshaller(SearchResult.marshaller))
 def get_surveys_search_results(survey_id):
@@ -147,6 +151,7 @@ def get_surveys_search_results(survey_id):
   }
 
 @surveys_bp.route('/surveys/<int:survey_id>/searches')
+@require_auth
 @my_jsonify
 @marshal_with(paginate_marshaller(Search.marshaller))
 def get_surveys_searches(survey_id):
@@ -158,6 +163,7 @@ def get_surveys_searches(survey_id):
   }
 
 @surveys_bp.route('/surveys/<int:survey_id>/tags')
+@require_auth
 @my_jsonify
 @marshal_with(paginate_marshaller(Tag.marshaller))
 def get_surveys_tags(survey_id):
@@ -170,6 +176,7 @@ def get_surveys_tags(survey_id):
   return {'results': [Tag(value=value) for value in seen]}
 
 @surveys_bp.route('/surveys/<int:survey_id>/searches', methods=['POST'])
+@require_auth
 @my_jsonify
 @marshal_with(Search.marshaller)
 def create_search(survey_id):

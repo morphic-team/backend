@@ -3,39 +3,17 @@ import io
 import time
 import hmac
 import hashlib
-from functools import wraps
 from flask import Blueprint, send_file, abort, request, g
 from flask_restful import marshal_with, fields, reqparse, marshal
 from backend import db
 from backend.models import SearchResult, ResultField, SurveyField, Tag, Search, Image, Session, User
 from backend.api.utils import my_jsonify
+from backend.auth import require_auth
 
 search_results_bp = Blueprint('search_results', __name__)
 
 # TODO: Move to config
 SERVER_SECRET = "morphic_image_signing_secret_change_in_production"
-
-
-def require_auth(f):
-  """Decorator to require session-based authentication"""
-  @wraps(f)
-  def decorated_function(*args, **kwargs):
-    # Get session token from header
-    session_token = request.headers.get('X-Session-Token')
-    if not session_token:
-      abort(401)
-    
-    # Look up session by token
-    session = Session.query.filter(Session.token == session_token).first()
-    if not session:
-      abort(401)
-    
-    # Store current user in Flask's g object for use in endpoint
-    g.current_user = session.user
-    g.current_session = session
-    
-    return f(*args, **kwargs)
-  return decorated_function
 
 
 def generate_signed_image_url(user_id, search_result_id, endpoint):
