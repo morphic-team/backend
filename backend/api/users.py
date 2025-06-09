@@ -18,6 +18,18 @@ def sign_up():
   parser.add_argument('password')
   args = parser.parse_args()
 
+  if not args.email_address or not args.password:
+    return {'error': 'Email and password are required'}, 400
+  
+  # Check if email already exists
+  existing_user = User.query.filter(User.email_address==args.email_address).first()
+  if existing_user:
+    return {'error': 'An account with this email address already exists'}, 409
+  
+  # Basic password validation
+  if len(args.password) < 6:
+    return {'error': 'Password must be at least 6 characters long'}, 400
+
   user = User(email_address=args.email_address)
   user.set_password(args.password)
   db.session.add(user)
