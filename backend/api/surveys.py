@@ -4,7 +4,7 @@ from flask import send_file, Blueprint, request
 from flask_restful import marshal_with, reqparse, fields
 from sqlalchemy.orm import joinedload
 from backend import db
-from backend.models import Survey, SearchResult, Search, SurveyField, Tag, ResultField
+from backend.models import Survey, SearchResult, Search, SurveyField, ResultField
 from backend.api.utils import my_jsonify, paginate_marshaller
 from backend.auth import require_auth
 from io import BytesIO
@@ -121,7 +121,6 @@ def get_survey(survey_id):
 @marshal_with(paginate_marshaller(SearchResult.marshaller))
 def get_surveys_search_results(survey_id):
   # Parse query parameters
-  filter_param = request.args.get('filter', None)
   per_page = int(request.args.get('per_page', 60))
   page = int(request.args.get('page', 1))
 
@@ -132,12 +131,6 @@ def get_surveys_search_results(survey_id):
     .filter(Search.survey_id==survey_id)
     .order_by(SearchResult.id_)
   )
-
-  if filter_param:
-    search_results_query = (search_results_query
-      .join(Tag)
-      .filter(Tag.value==filter_param)
-    )
 
   return {
     'count': search_results_query.count(),
@@ -162,18 +155,6 @@ def get_surveys_searches(survey_id):
     'results': searches
   }
 
-@surveys_bp.route('/surveys/<int:survey_id>/tags')
-@require_auth
-@my_jsonify
-@marshal_with(paginate_marshaller(Tag.marshaller))
-def get_surveys_tags(survey_id):
-  survey = Survey.query.filter(Survey.id_==survey_id).first()
-
-  tags = Tag.query.join(SearchResult).join(Search).filter(Search.survey==survey).all()
-
-  seen = {tag.value for tag in tags}
-
-  return {'results': [Tag(value=value) for value in seen]}
 
 @surveys_bp.route('/surveys/<int:survey_id>/searches', methods=['POST'])
 @require_auth

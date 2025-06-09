@@ -7,7 +7,7 @@ import os
 from flask import Blueprint, send_file, abort, request, g
 from flask_restful import marshal_with, fields, reqparse, marshal
 from backend import db
-from backend.models import SearchResult, ResultField, SurveyField, Tag, Search, Image, Session, User
+from backend.models import SearchResult, ResultField, SurveyField, Search, Image, Session, User
 from backend.api.utils import my_jsonify
 from backend.auth import require_auth
 
@@ -167,11 +167,6 @@ def update_search_result(search_result_id):
       result_field.value = field_value
 
     db.session.add(result_field)
-
-  # Flush to ensure all result_fields are persisted before updating tags
-  db.session.flush()
-  
-  search_result.update_tags()
 
   db.session.add(search_result)
   db.session.commit()

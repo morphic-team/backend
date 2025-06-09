@@ -8,7 +8,6 @@ class Entity(object):
 from backend.models.sessions import Session
 from backend.models.users import User
 from backend.models.surveys import Survey
-from backend.models.tags import Tag
 from backend.models.survey_fields import SurveyField
 from backend.models.searches import Search
 from backend.models.images import Image
