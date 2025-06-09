@@ -3,6 +3,7 @@ import io
 import time
 import hmac
 import hashlib
+import os
 from flask import Blueprint, send_file, abort, request, g
 from flask_restful import marshal_with, fields, reqparse, marshal
 from backend import db
@@ -12,8 +13,7 @@ from backend.auth import require_auth
 
 search_results_bp = Blueprint('search_results', __name__)
 
-# TODO: Move to config
-SERVER_SECRET = "morphic_image_signing_secret_change_in_production"
+SERVER_SECRET = os.environ['MORPHIC_IMAGE_SIGNING_SECRET']
 
 
 def generate_signed_image_url(user_id, search_result_id, endpoint):
