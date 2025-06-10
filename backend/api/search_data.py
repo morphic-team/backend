@@ -1,5 +1,6 @@
 from flask import abort, Blueprint
 from flask_restful import reqparse
+from flask_cors import cross_origin
 from backend import db
 from backend.models import User, Search, SearchResult
 from backend.auth import require_auth
@@ -8,7 +9,8 @@ import json
 search_data_bp = Blueprint('search_data', __name__)
 
 
-@search_data_bp.route('/upload-google-results', methods=['POST'])
+@search_data_bp.route('/upload-google-results', methods=['POST', 'OPTIONS'])
+@cross_origin(origins='chrome-extension://*', supports_credentials=True, allow_headers=['Content-Type', 'X-Session-Token'])
 @require_auth
 def upload_search_data():
   parser = reqparse.RequestParser()
