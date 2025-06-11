@@ -13,7 +13,7 @@ search_data_bp = Blueprint('search_data', __name__)
 
 
 @search_data_bp.route('/upload-google-results', methods=['POST', 'OPTIONS'])
-@cross_origin(origins='chrome-extension://*', supports_credentials=False, allow_headers=['Content-Type', 'X-Upload-Token'])
+@cross_origin(origins=['chrome-extension://*', 'https://www.google.com'], supports_credentials=False, allow_headers=['Content-Type', 'X-Upload-Token'])
 def upload_search_data():
   # Handle preflight OPTIONS request
   if request.method == 'OPTIONS':
