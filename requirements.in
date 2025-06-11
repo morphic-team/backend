@@ -12,6 +12,7 @@ psycopg2
 
 # Security
 bcrypt
+PyJWT
 
 # External services
 requests

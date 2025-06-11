@@ -1,79 +1,39 @@
 import json
 import io
-import time
-import hmac
-import hashlib
-import os
-from flask import Blueprint, send_file, abort, request, g
+from flask import Blueprint, send_file, abort, g
 from flask_restful import marshal_with, fields, reqparse, marshal
 from backend import db
 from backend.models import SearchResult, ResultField, SurveyField, Search, Image, Session, User
 from backend.api.utils import my_jsonify
 from backend.auth import require_auth
+from backend.url_signing import generate_signed_url, verify_signed_url
 
 search_results_bp = Blueprint('search_results', __name__)
-
-SERVER_SECRET = os.environ['MORPHIC_IMAGE_SIGNING_SECRET']
 
 
 def generate_signed_image_url(user_id, search_result_id, endpoint):
   """Generate a signed URL for accessing cached images or thumbnails"""
-  expires = int(time.time() + 3600)  # 1 hour expiry
-  
-  # Derive a signing key unique to this user (no storage needed)
-  user_signing_key = hmac.new(
-    SERVER_SECRET.encode(), 
-    f"image_access_{user_id}".encode(), 
-    hashlib.sha256
-  ).digest()
-  
-  # Sign the specific request
-  payload = f"{search_result_id}:{expires}"
-  signature = hmac.new(user_signing_key, payload.encode(), hashlib.sha256).hexdigest()
-  
-  return f"/api/search_results/{search_result_id}/{endpoint}?u={user_id}&e={expires}&s={signature}"
+  return generate_signed_url(
+    user_id, 
+    search_result_id, 
+    f"/api/search_results/{search_result_id}/{endpoint}",
+    "image_access"
+  )
 
 
 def verify_image_access(search_result_id):
   """Verify that the user has valid access to this image"""
-  user_id = request.args.get('u')
-  expires = request.args.get('e')
-  signature = request.args.get('s')
+  def check_image_authorization(user_id, search_result_id):
+    """Check if user owns the survey this search result belongs to"""
+    search_result = SearchResult.query.filter(SearchResult.id_==search_result_id).first()
+    if not search_result:
+      abort(404)
+    return search_result.search.survey.user_id == user_id
   
-  if not user_id or not expires or not signature:
-    abort(403)
+  user_id = verify_signed_url(search_result_id, "image_access", check_image_authorization)
   
-  try:
-    expires_int = int(expires)
-  except ValueError:
-    abort(403)
-  
-  # Check expiration
-  if expires_int < time.time():
-    abort(410)  # Expired
-  
-  # Re-derive the same signing key for this user
-  user_signing_key = hmac.new(
-    SERVER_SECRET.encode(), 
-    f"image_access_{user_id}".encode(), 
-    hashlib.sha256
-  ).digest()
-  
-  # Verify signature
-  expected_payload = f"{search_result_id}:{expires}"
-  expected_sig = hmac.new(user_signing_key, expected_payload.encode(), hashlib.sha256).hexdigest()
-  if not hmac.compare_digest(signature, expected_sig):
-    abort(403)
-  
-  # Verify user still has survey access
+  # Return the search result for the endpoint to use
   search_result = SearchResult.query.filter(SearchResult.id_==search_result_id).first()
-  if not search_result:
-    abort(404)
-  
-  # Check if user owns the survey this search result belongs to
-  if search_result.search.survey.user_id != int(user_id):
-    abort(403)
-  
   return search_result
 
 

@@ -71,7 +71,7 @@ def upgrade():
     sa.Column('visible_link', sa.String(), nullable=False),
     sa.Column('direct_link', sa.String(), nullable=False),
     sa.Column('image_scraped_state', sa.String(), nullable=False),
-    sa.Column('image_id', sa.Integer(), nullable=False),
+    sa.Column('image_id', sa.Integer(), nullable=True),
     sa.Column('completion_state', sa.String(), nullable=False),
     sa.Column('id_', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['image_id'], ['images.id_'], ),

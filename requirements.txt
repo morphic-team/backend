@@ -69,6 +69,8 @@ pillow==11.2.1
     #   imagehash
 psycopg2==2.9.10
     # via -r requirements.in
+pyjwt==2.10.1
+    # via -r requirements.in
 pytz==2025.2
     # via flask-restful
 pywavelets==1.8.0

@@ -1,6 +1,6 @@
 import json
 import unicodecsv
-from flask import send_file, Blueprint, request
+from flask import send_file, Blueprint, request, g
 from flask_restful import marshal_with, reqparse, fields
 from sqlalchemy.orm import joinedload
 from backend import db

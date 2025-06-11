@@ -55,7 +55,7 @@ class SearchResult(db.Model, Entity):
     FAILURE = 'FAILURE'
 
   image_scraped_state = Column(String, default='NEW', nullable=False)
-  image_id = Column(Integer, ForeignKey('images.id_'), nullable=False)
+  image_id = Column(Integer, ForeignKey('images.id_'), nullable=True)
   image = relationship('Image')
 
   class CompletionStates:
