@@ -26,20 +26,20 @@ def done_scraping_image(search_result, success):
 def do_unscraped_search_result(unscraped_search_result):
   logger.info('Processing search_result %s' % unscraped_search_result.id_)
   if not unscraped_search_result.direct_link:
-    logger.warn("Search result %s missing link." % unscraped_search_result)
+    logger.warning("Search result %s missing link." % unscraped_search_result)
     done_scraping_image(unscraped_search_result, success=False)
     return
 
   try:
     print(unscraped_search_result.id_)
     raw_image_response = requests.get(unscraped_search_result.direct_link, timeout=10)
-  except requests.exceptions.RequestException, socket.timeout:
-    logger.warn("Timout fetching image at url %s." % unscraped_search_result.direct_link)
+  except (requests.exceptions.RequestException, socket.timeout):
+    logger.warning("Timout fetching image at url %s." % unscraped_search_result.direct_link)
     done_scraping_image(unscraped_search_result, success=False)
     return
 
   if raw_image_response.status_code != 200:
-    logger.warn("Search result %s image link %s returned non 200 response." % (unscraped_search_result, unscraped_search_result.direct_link))
+    logger.warning("Search result %s image link %s returned non 200 response." % (unscraped_search_result, unscraped_search_result.direct_link))
     done_scraping_image(unscraped_search_result, success=False)
     return
 
@@ -55,7 +55,7 @@ def do_unscraped_search_result(unscraped_search_result):
     image_file = BytesIO()
     image.save(image_file, 'JPEG')
 
-    image.thumbnail((500, 500), Image.ANTIALIAS)
+    image.thumbnail((500, 500), Image.Resampling.LANCZOS)
     thumbnail_file = BytesIO()
     image.save(thumbnail_file, 'JPEG')
 
@@ -65,7 +65,7 @@ def do_unscraped_search_result(unscraped_search_result):
       image_hash=str(image_hash),
     )
   except (IOError, Image.DecompressionBombWarning) as _:
-    logger.warn("Issue with PIL processing image.")
+    logger.warning("Issue with PIL processing image.")
     done_scraping_image(unscraped_search_result, success=False)
     return
 
@@ -82,7 +82,7 @@ def do_unscraped_search_result(unscraped_search_result):
   )
 
   if canonical_result:
-      logger.warn("Marking as duplicate: %s -> canonical: %s" % (unscraped_search_result, canonical_result))
+      logger.warning("Marking as duplicate: %s -> canonical: %s" % (unscraped_search_result, canonical_result))
       unscraped_search_result.completion_state = SearchResult.CompletionStates.NOT_USABLE
       unscraped_search_result.duplicate_of_id = canonical_result.id_
 
