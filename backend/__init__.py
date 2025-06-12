@@ -3,6 +3,9 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
+# Configuration constants
+MAX_CONTENT_LENGTH_BYTES = 16 * 1024 * 1024  # 16MB
+
 db = SQLAlchemy()
 migrate = Migrate()
 
@@ -14,7 +17,7 @@ def create_app(environment="dev"):
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["SQLALCHEMY_DATABASE_URI"]
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
     app.config["SQLALCHEMY_SESSION_OPTIONS"] = {"autoflush": False}
-    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
+    app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH_BYTES
 
     db.init_app(app)
     migrate.init_app(app, db)

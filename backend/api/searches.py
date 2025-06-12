@@ -5,6 +5,9 @@ from backend.api.utils import my_jsonify
 from backend.auth import require_auth
 from backend.search_urls import generate_upload_google_results_url, generate_google_search_url
 
+# Token expiration time in seconds (24 hours)
+UPLOAD_TOKEN_EXPIRES_IN = 24 * 3600
+
 searches_bp = Blueprint('searches', __name__)
 
 
@@ -38,7 +41,7 @@ def generate_search_upload_url(search_id):
     g.current_user.id_,
     search_id,
     args.limit,
-    expires_in=24*3600  # 24 hours
+    expires_in=UPLOAD_TOKEN_EXPIRES_IN
   )
   
   # Generate Google search URL with embedded token
@@ -47,5 +50,5 @@ def generate_search_upload_url(search_id):
   return {
     'google_search_url': google_search_url,
     'limit': args.limit,
-    'expires_in': 24*3600
+    'expires_in': UPLOAD_TOKEN_EXPIRES_IN
   }
