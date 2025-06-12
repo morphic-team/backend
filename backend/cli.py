@@ -9,10 +9,11 @@ def register_commands(app):
     """Register CLI commands with the Flask app."""
     
     @app.cli.command()
-    def run_worker():
+    @click.option('--threads', default=1, type=int, help='Number of worker threads (default: 1)')
+    def run_worker(threads):
         """Run the image processing worker."""
         from backend.workers.image_processor import run_worker
-        run_worker()
+        run_worker(num_threads=threads)
     
     @app.cli.command()
     @click.option('--user-id', required=True, type=int, help='User ID to populate mock survey for')

@@ -6,6 +6,8 @@ This worker runs continuously, picking up unprocessed search results and:
 2. Generates a perceptual hash for duplicate detection
 3. Creates thumbnail version
 4. Marks duplicates within the same survey
+
+Supports multi-threading with PostgreSQL row-level locking to prevent race conditions.
 """
 import socket
 from io import BytesIO
@@ -15,7 +17,9 @@ import requests
 import logging
 import warnings
 from time import sleep
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from sqlalchemy.sql.expression import func
+import threading
 
 from backend.models import SearchResult, Search
 from backend.models import Image as ImageModel
@@ -112,25 +116,78 @@ def process_search_result(search_result):
     mark_image_processing_complete(search_result, success=True)
 
 
-def run_worker():
-    """Main worker loop - continuously processes unscraped search results."""
-    logger.info("Starting image processing worker")
+def get_next_work_item():
+    """
+    Atomically claim the next unprocessed search result using PostgreSQL row-level locking.
     
-    while True:
-        # Get a random unprocessed search result
-        unscraped_search_result = (
+    Uses SELECT FOR UPDATE SKIP LOCKED to ensure multiple workers can run concurrently
+    without race conditions. Each worker will get a different row to process.
+    """
+    try:
+        # Start a transaction and lock a row for this worker
+        search_result = (
             SearchResult.query
             .filter(SearchResult.image_scraped_state == 'NEW')
-            .order_by(func.random())
+            .order_by(func.random())  # Randomize to spread work across surveys
+            .with_for_update(skip_locked=True)  # Skip rows locked by other workers
             .first()
         )
         
-        if unscraped_search_result is None:
-            logger.info('No unprocessed results, sleeping...')
-            sleep(5)
+        if search_result:
+            # Mark as STARTED to claim it (even if processing fails, we won't retry immediately)
+            search_result.image_scraped_state = SearchResult.ImageScrapedStates.STARTED
+            db.session.commit()
+            return search_result
+        
+        return None
+    except Exception as e:
+        logger.error("Error claiming work item: %s", e)
+        db.session.rollback()
+        return None
+
+
+def worker_thread():
+    """Single worker thread that continuously processes search results."""
+    thread_id = threading.current_thread().name
+    logger.info("Starting worker thread %s", thread_id)
+    
+    while True:
+        # Atomically claim the next work item
+        search_result = get_next_work_item()
+        
+        if search_result is None:
+            sleep(5)  # No work available, sleep and retry
             continue
         
-        process_search_result(unscraped_search_result)
+        logger.info("Thread %s processing search_result %s", thread_id, search_result.id_)
+        process_search_result(search_result)
+
+
+def run_worker(num_threads=1):
+    """
+    Run the image processing worker with specified number of threads.
+    
+    Args:
+        num_threads (int): Number of worker threads to run concurrently (default: 1)
+    """
+    logger.info("Starting image processing worker with %d threads", num_threads)
+    
+    if num_threads == 1:
+        # Single-threaded mode - run directly
+        worker_thread()
+    else:
+        # Multi-threaded mode using ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=num_threads, thread_name_prefix="ImageWorker") as executor:
+            # Submit worker threads
+            futures = [executor.submit(worker_thread) for _ in range(num_threads)]
+            
+            try:
+                # Wait for all threads (they run indefinitely)
+                for future in as_completed(futures):
+                    future.result()  # This will raise any exceptions
+            except KeyboardInterrupt:
+                logger.info("Received interrupt signal, shutting down workers...")
+                executor.shutdown(wait=True)
 
 
 # Legacy compatibility
