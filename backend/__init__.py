@@ -10,7 +10,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 
 
-def create_app(environment="dev"):
+def create_app():
     app = Flask(__name__)
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = "False"
@@ -30,5 +30,9 @@ def create_app(environment="dev"):
 
     from backend.api import register_blueprints
     register_blueprints(app)
+    
+    # Register CLI commands
+    from backend.cli import register_commands
+    register_commands(app)
 
     return app
