@@ -146,21 +146,23 @@ def get_next_work_item():
         return None
 
 
-def worker_thread():
+def worker_thread(app):
     """Single worker thread that continuously processes search results."""
     thread_id = threading.current_thread().name
     logger.info("Starting worker thread %s", thread_id)
     
-    while True:
-        # Atomically claim the next work item
-        search_result = get_next_work_item()
-        
-        if search_result is None:
-            sleep(5)  # No work available, sleep and retry
-            continue
-        
-        logger.info("Thread %s processing search_result %s", thread_id, search_result.id_)
-        process_search_result(search_result)
+    # Each thread needs its own application context
+    with app.app_context():
+        while True:
+            # Atomically claim the next work item
+            search_result = get_next_work_item()
+            
+            if search_result is None:
+                sleep(5)  # No work available, sleep and retry
+                continue
+            
+            logger.info("Thread %s processing search_result %s", thread_id, search_result.id_)
+            process_search_result(search_result)
 
 
 def run_worker(num_threads=1):
@@ -170,16 +172,19 @@ def run_worker(num_threads=1):
     Args:
         num_threads (int): Number of worker threads to run concurrently (default: 1)
     """
+    from flask import current_app
+    
     logger.info("Starting image processing worker with %d threads", num_threads)
+    app = current_app._get_current_object()  # Get the actual app instance
     
     if num_threads == 1:
         # Single-threaded mode - run directly
-        worker_thread()
+        worker_thread(app)
     else:
         # Multi-threaded mode using ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=num_threads, thread_name_prefix="ImageWorker") as executor:
-            # Submit worker threads
-            futures = [executor.submit(worker_thread) for _ in range(num_threads)]
+            # Submit worker threads with app instance
+            futures = [executor.submit(worker_thread, app) for _ in range(num_threads)]
             
             try:
                 # Wait for all threads (they run indefinitely)
