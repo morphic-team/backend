@@ -1,6 +1,6 @@
 import json
 from functools import wraps
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_restful import marshal_with, fields, reqparse
 from backend import db
 from backend.models import Survey, User, Session, SurveyField
@@ -46,7 +46,20 @@ def sign_up():
 @my_jsonify
 @marshal_with(paginate_marshaller(Survey.marshaller))
 def get_users_surveys(user_id):
-  users_surveys = Survey.query.filter(Survey.user_id==user_id).all()
+  # Parse is_archived parameter (defaults to showing non-archived)
+  is_archived_param = request.args.get('is_archived')
+  
+  query = Survey.query.filter(Survey.user_id == user_id)
+  
+  # Filter by archive status
+  if is_archived_param is not None:
+    is_archived = is_archived_param.lower() == 'true'
+    query = query.filter(Survey.is_archived == is_archived)
+  else:
+    # Default: show only non-archived surveys
+    query = query.filter(Survey.is_archived == False)
+  
+  users_surveys = query.all()
   return {
     'results': users_surveys
   }

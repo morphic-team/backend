@@ -1,5 +1,6 @@
 import json
 import unicodecsv
+from datetime import datetime
 from flask import send_file, Blueprint, request, g
 from flask_restful import marshal_with, reqparse, fields
 from sqlalchemy.orm import joinedload
@@ -180,3 +181,39 @@ def create_search(survey_id):
   db.session.add(search)
   db.session.commit()
   return search
+
+
+@surveys_bp.route('/surveys/<int:survey_id>', methods=['PATCH'])
+@require_auth
+@my_jsonify
+def update_survey(survey_id):
+  survey = Survey.query.filter(Survey.id_ == survey_id).first()
+  
+  if not survey:
+    return {'error': 'Survey not found'}, 404
+  
+  parser = reqparse.RequestParser()
+  parser.add_argument('is_archived', type=bool)
+  args = parser.parse_args()
+  
+  # Handle archive status update
+  if args.is_archived is not None:
+    if args.is_archived and not survey.is_archived:
+      # Archiving the survey
+      survey.is_archived = True
+      survey.archived_at = datetime.utcnow()
+    elif not args.is_archived and survey.is_archived:
+      # Unarchiving the survey
+      survey.is_archived = False
+      survey.archived_at = None
+    # If status isn't changing, no need to update timestamps
+  
+  db.session.commit()
+  
+  return {
+    'id_': survey.id_,
+    'name': survey.name,
+    'comments': survey.comments,
+    'is_archived': survey.is_archived,
+    'archived_at': survey.archived_at.isoformat() if survey.archived_at else None
+  }
