@@ -14,12 +14,16 @@ from io import BytesIO
 from PIL import Image
 import imagehash
 import requests
+import random
+import time
 import logging
 import warnings
 from time import sleep
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from sqlalchemy.sql.expression import func
 import threading
+from urllib.parse import urlparse
+import urllib3
 
 from backend.models import SearchResult, Search
 from backend.models import Image as ImageModel
@@ -28,6 +32,9 @@ from backend import db
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+# Suppress urllib3 connection pool warnings
+urllib3.disable_warnings(urllib3.exceptions.HTTPWarning)
 
 
 def mark_image_processing_complete(search_result, success):
@@ -41,6 +48,159 @@ def mark_image_processing_complete(search_result, success):
     db.session.commit()
 
 
+class ImageDownloader:
+    """Enhanced image downloader with best_python strategy."""
+    
+    def __init__(self, max_retries=3, timeout=10, max_connections=100):
+        self.max_retries = max_retries
+        self.timeout = timeout
+        self.max_connections = max_connections
+        
+        # User agents for rotation
+        self.user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        ]
+        
+        # Initialize session with connection pooling
+        self.session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=100,
+            pool_maxsize=100,
+            pool_block=False
+        )
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)
+    
+    def _get_browser_headers(self, url):
+        """Generate realistic browser headers."""
+        parsed = urlparse(url)
+        user_agent = random.choice(self.user_agents)
+        
+        headers = {
+            'User-Agent': user_agent,
+            'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+        }
+        
+        # Add referrer for hotlink protection bypass
+        if parsed.netloc not in ['localhost', '127.0.0.1']:
+            headers['Referer'] = f"{parsed.scheme}://{parsed.netloc}/"
+        
+        # Browser-specific headers based on user agent
+        if 'Chrome' in user_agent:
+            headers.update({
+                'Sec-Fetch-Dest': 'image',
+                'Sec-Fetch-Mode': 'no-cors',
+                'Sec-Fetch-Site': 'cross-site',
+                'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"'
+            })
+        elif 'Firefox' in user_agent:
+            headers['Sec-Fetch-Dest'] = 'image'
+            headers['Sec-Fetch-Mode'] = 'no-cors'
+            headers['Sec-Fetch-Site'] = 'cross-site'
+        
+        return headers
+    
+    def download_image(self, url):
+        """Download image with retry logic and browser-like headers. Returns content or raises exception."""
+        for attempt in range(self.max_retries + 1):
+            if attempt > 0:
+                # Exponential backoff (matching validated algorithm)
+                backoff_time = 2 ** (attempt - 1)  # 1s, 2s, 4s
+                time.sleep(backoff_time)
+            
+            # Dynamic timeout increase on retries
+            current_timeout = self.timeout * (1 + attempt * 0.5)
+            
+            try:
+                # Fresh headers for each attempt
+                headers = self._get_browser_headers(url)
+                
+                response = self.session.get(
+                    url, 
+                    headers=headers,
+                    timeout=current_timeout, 
+                    stream=True,
+                    allow_redirects=True
+                )
+                
+                # Handle response scenarios (matching validated design)
+                if response.status_code == 200:
+                    # Success! Return the content
+                    try:
+                        return BytesIO(response.content)
+                    finally:
+                        # Ensure response is closed to free memory (matching validated design)
+                        response.close()
+                elif response.status_code in [429, 503]:
+                    # Rate limiting - retry with backoff (matching validated design)
+                    retry_after = response.headers.get('Retry-After')
+                    if retry_after and attempt < self.max_retries:
+                        try:
+                            wait_time = int(retry_after)
+                            time.sleep(min(wait_time, 60))  # Cap at 60 seconds
+                        except ValueError:
+                            pass
+                    # Continue to next attempt
+                    continue
+                else:
+                    # Non-200 status code - FAIL immediately (matching validated design)
+                    # The validated design does NOT retry 403, 404, 500, etc.
+                    raise requests.exceptions.HTTPError(f"HTTP {response.status_code} response", response=response)
+                
+            except requests.exceptions.Timeout:
+                if attempt == self.max_retries:
+                    raise
+                continue
+            except requests.exceptions.ConnectionError:
+                if attempt == self.max_retries:
+                    raise
+                continue
+            except requests.exceptions.SSLError:
+                if attempt == self.max_retries:
+                    raise
+                continue
+            except requests.exceptions.HTTPError:
+                # Don't retry HTTP errors, they're permanent
+                raise
+            except Exception:
+                if attempt == self.max_retries:
+                    raise
+                continue
+        
+        # Should not reach here, but just in case
+        raise requests.exceptions.RequestException("All retry attempts failed")
+    
+    def cleanup(self):
+        """Clean up session resources."""
+        if hasattr(self, 'session'):
+            self.session.close()
+
+
+# Global downloader instance (thread-safe)
+_downloader = None
+_downloader_lock = threading.Lock()
+
+def get_downloader():
+    """Get or create the global downloader instance."""
+    global _downloader
+    if _downloader is None:
+        with _downloader_lock:
+            if _downloader is None:
+                _downloader = ImageDownloader()
+    return _downloader
+
+
 def process_search_result(search_result):
     """Process a single search result: download, process, and check for duplicates."""
     logger.info('Processing search_result %s', search_result.id_)
@@ -50,23 +210,14 @@ def process_search_result(search_result):
         mark_image_processing_complete(search_result, success=False)
         return
     
-    # Download image
+    # Download image using enhanced downloader
+    downloader = get_downloader()
     try:
-        raw_image_response = requests.get(search_result.direct_link, timeout=10)
-    except (requests.exceptions.RequestException, socket.timeout):
-        logger.warning("Timeout fetching image at url %s.", search_result.direct_link)
+        raw_image_file = downloader.download_image(search_result.direct_link)
+    except Exception as e:
+        logger.warning("Failed to fetch image at url %s: %s", search_result.direct_link, str(e))
         mark_image_processing_complete(search_result, success=False)
         return
-    
-    if raw_image_response.status_code != 200:
-        logger.warning(
-            "Search result %s image link %s returned non 200 response.",
-            search_result, search_result.direct_link
-        )
-        mark_image_processing_complete(search_result, success=False)
-        return
-    
-    raw_image_file = BytesIO(raw_image_response.content)
     
     # Process image
     warnings.simplefilter('error', Image.DecompressionBombWarning)
@@ -177,22 +328,30 @@ def run_worker(num_threads=1):
     logger.info("Starting image processing worker with %d threads", num_threads)
     app = current_app._get_current_object()  # Get the actual app instance
     
-    if num_threads == 1:
-        # Single-threaded mode - run directly
-        worker_thread(app)
-    else:
-        # Multi-threaded mode using ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=num_threads, thread_name_prefix="ImageWorker") as executor:
-            # Submit worker threads with app instance
-            futures = [executor.submit(worker_thread, app) for _ in range(num_threads)]
-            
-            try:
-                # Wait for all threads (they run indefinitely)
-                for future in as_completed(futures):
-                    future.result()  # This will raise any exceptions
-            except KeyboardInterrupt:
-                logger.info("Received interrupt signal, shutting down workers...")
-                executor.shutdown(wait=True)
+    try:
+        if num_threads == 1:
+            # Single-threaded mode - run directly
+            worker_thread(app)
+        else:
+            # Multi-threaded mode using ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=num_threads, thread_name_prefix="ImageWorker") as executor:
+                # Submit worker threads with app instance
+                futures = [executor.submit(worker_thread, app) for _ in range(num_threads)]
+                
+                try:
+                    # Wait for all threads (they run indefinitely)
+                    for future in as_completed(futures):
+                        future.result()  # This will raise any exceptions
+                except KeyboardInterrupt:
+                    logger.info("Received interrupt signal, shutting down workers...")
+                    executor.shutdown(wait=True)
+    finally:
+        # Clean up downloader resources
+        global _downloader
+        if _downloader is not None:
+            logger.info("Cleaning up image downloader resources...")
+            _downloader.cleanup()
+            _downloader = None
 
 
 # Legacy compatibility
