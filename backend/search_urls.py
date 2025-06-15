@@ -11,6 +11,10 @@ SERVER_SECRET = os.environ['MORPHIC_SIGNING_SECRET']
 PUBLIC_BASE_URL = os.environ['MORPHIC_PUBLIC_BASE_URL']
 GOOGLE_SEARCH_BASE_URL = os.environ['GOOGLE_SEARCH_BASE_URL']
 
+# JWT claims constants
+JWT_AUDIENCE = 'morphic-browser-extension'
+JWT_ISSUER = 'morphic-api'
+
 
 def generate_upload_google_results_url(user_id, search_id, limit, expires_in=3600):
     """
@@ -32,7 +36,9 @@ def generate_upload_google_results_url(user_id, search_id, limit, expires_in=360
         'limit': limit,
         'user_id': user_id,
         'iat': int(time.time()),
-        'exp': expires
+        'exp': expires,
+        'aud': JWT_AUDIENCE,
+        'iss': JWT_ISSUER
     }
     
     # Generate the JWT token
